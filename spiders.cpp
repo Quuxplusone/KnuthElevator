@@ -1,3 +1,57 @@
+/*
+    "Efficient Coroutine Generation of Constrained Gray Sequences" (2001),
+    reprinted in "Selected Papers on Computer Languages" pages 545–574.
+    This doesn't include the actual arbitrary-digraph stuff, but does
+    include the three preliminary approaches that solve subproblems.
+
+    Our task is to produce all n-bit bitstrings satisfying a certain set
+    of constraints; and furthermore, to produce those bitstrings in a
+    "Gray sequence," in which only one bit changes at each step.
+    (For example, 010 011 001 101 is a Gray sequence, but 010 100 is not.)
+
+    Knuth narrates the algorithm in terms of a row of "trolls," each either
+    awake or asleep, and each carrying a lamp which may be on or off. When a
+    sleeping troll is poked, it awakes and pokes its neighbor. When an awake
+    troll is poked, it toggles the state of its lamp and then goes to sleep
+    again. By starting all the trolls awake and their lamps off, we can run
+    through a Gray sequence of all possible bitstrings by repeatedly poking
+    the endmost troll. Here 'w' means awake and 's' means asleep, and
+    capitalization indicates "lamp on":
+        wwww (0000)
+        wwwS (0001)
+        wwSW (0011)
+        wwSs (0010)
+        wSWw (0110)
+        wSWS (0111)
+        wSsW (0101)
+
+    This protocol is implemented by `UnconstrainedTroll` in the function
+    `unconstrained` below.
+
+    But we don't want to produce _all_ bitstrings; we want only those
+    satisfying a set of constraints. The simplest constraint to consider
+    is where each bit's value must be less-than-or-equal-to the value of
+    the bit to its left. (That is, the totally acyclic digraph of
+    "bit X is constrained to be less-or-equal-to bit Y" will be a
+    simple unbranching tree connecting all the bits in a chain.)
+    Knuth gives a troll-based protocol for this constrained problem;
+    it is implemented by `ChainTroll` in the function `chains` below.
+
+    Another simple constraint is where the totally acyclic digraph forms
+    a bipartite "fence": bit 0 must be less-or-equal-to bit 1, bit 1 must
+    be greater-or-equal-to bits 0 and 2, bit 2 must be less-or-equal-to
+    bits 1 and 3, bit 3 must be greater-or-equal-to bits 2 and 4, and so on.
+    Knuth gives a troll-based protocol for this constrained problem; it
+    is implemented by `FenceTroll` in the function `fence_digraph` below.
+
+    Knuth's paper goes on to define a simple text-based serialization
+    format for totally acyclic digraphs, and describe a troll-based
+    protocol for the general case (for constraints corresponding to any
+    arbitrary user-provided totally acyclic digraph). The general case
+    solution involves composing coroutines together in ways I don't fully
+    understand yet. These parts of Knuth's paper are not implemented here.
+*/
+
 #include <coroutine>
 #include <cstdio>
 #include <deque>
