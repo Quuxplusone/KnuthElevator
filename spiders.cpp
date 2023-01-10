@@ -116,6 +116,40 @@ void unconstrained(int n) {
     }
 }
 
+void unconstrained_without_coroutines(int n) {
+    struct UnconstrainedTroll {
+        UnconstrainedTroll *next_troll = nullptr;
+        bool *lamp = nullptr;
+        bool is_asleep = false;
+        bool poke() {
+            if (!is_asleep) {
+                is_asleep = !is_asleep;
+                *lamp = !*lamp;
+                return true;
+            } else {
+                is_asleep = !is_asleep;
+                return (next_troll ? next_troll->poke() : false);
+            }
+        }
+        static UnconstrainedTroll make(UnconstrainedTroll *next_troll, bool *lamp) {
+            return UnconstrainedTroll{next_troll, lamp};
+        }
+    };
+
+    auto lamps = std::deque<bool>(n, false);
+    auto trolls = std::vector<UnconstrainedTroll>(n);
+    for (int i=0; i < n; ++i) {
+        trolls[i] = UnconstrainedTroll::make(i > 0 ? &trolls[i-1] : nullptr, &lamps[i]);
+    }
+    while (trolls[n-1].poke()) {
+        printf("Lamps are: ");
+        for (bool b : lamps) {
+            printf("%c", (b ? '1' : '0'));
+        }
+        printf("\n");
+    }
+}
+
 void chains(int n) {
     // SPCL page 552
     struct ChainTroll : TrollBase<ChainTroll> {
@@ -194,6 +228,9 @@ int main()
 {
     puts("-----UNCONSTRAINED");
     unconstrained(4);
+
+    puts("-----UNCONSTRAINED WITHOUT COROUTINES");
+    unconstrained_without_coroutines(4);
 
     puts("-----CHAINS");
     chains(4);
